@@ -14,7 +14,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
   var window: UIWindow?
 
   func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-    
+    initServices()
     root()
     
     return true
@@ -25,9 +25,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     window = UIWindow(frame: UIScreen.main.bounds)
     
-    window?.rootViewController = ViewController()
-    
+    let navVc = UINavigationController(rootViewController: HomeViewController())
+    window?.rootViewController = navVc
     window?.makeKeyAndVisible()
+    
+  }
+  
+  private func initServices() {
+    
+    ServiceLocator.shared.addService(service: GitHubApi.shared)
+    
     
   }
 
