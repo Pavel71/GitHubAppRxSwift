@@ -23,11 +23,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
   private func root() {
     
-    window = UIWindow(frame: UIScreen.main.bounds)
     
-    let navVc = UINavigationController(rootViewController: HomeViewController())
-    window?.rootViewController = navVc
+    window = UIWindow(frame: UIScreen.main.bounds)
+    window?.rootViewController = UIViewController()
     window?.makeKeyAndVisible()
+    
+    
+    let sceneCoordinator = SceneCoordinator(window: window!)
+    
+    let homeViewModel = HomeViewModel(coordinator: sceneCoordinator)
+    let firstScene    = Scene.home(homeViewModel)
+    
+    sceneCoordinator.transition(to: firstScene, type: .root)
     
   }
   

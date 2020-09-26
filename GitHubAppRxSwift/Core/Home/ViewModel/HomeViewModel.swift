@@ -32,7 +32,6 @@ final class HomeViewModel:ViewModelType {
     let cancelSearch    : ControlEvent<Void>
     let prefetchRows    : ControlEvent<[IndexPath]>
     
-    
   }
   
   // MARK: - Output
@@ -43,6 +42,24 @@ final class HomeViewModel:ViewModelType {
   }
   
   let empty   = UsersSearchResult(totalCount: 0, users: [])
+  
+  
+  // MARK: Transition
+  
+  lazy var showDetails: Action<GitHubUser, Swift.Never> = { this in
+    
+    // Input
+    return Action { user in
+      let detailViewModel = DetailsViewModel(
+        coordinator: self.sceneCoordinator,user : user)
+      // output
+    return this.sceneCoordinator
+      .transition(to: Scene.details(detailViewModel), type: .push)
+      .asObservable() }
+    
+  }(self)
+  
+  // Тут если только слушать когда пользователь вернется обратно! то нам нужно сделать поп координатора без анимации!
  
   
   // Properties
@@ -53,7 +70,15 @@ final class HomeViewModel:ViewModelType {
   var gitHubAPi: GitHubApi! = ServiceLocator.shared.getService()
   
   
-//  let bag = DisposeBag()
+  let bag = DisposeBag()
+  
+  
+  let sceneCoordinator: SceneCoordinatorType
+  
+  
+  init(coordinator: SceneCoordinatorType) {
+    self.sceneCoordinator = coordinator
+  }
   // MARK: - Transform
   
   func transform(input: Input) -> Output {
@@ -72,17 +97,12 @@ final class HomeViewModel:ViewModelType {
     let prefetchSignal = input.prefetchRows
       .debounce(.milliseconds(700), scheduler: MainScheduler.instance)
     .map{$0.compactMap{$0.row}}
-    .distinctUntilChanged()
     .filter{[unowned self] indexes in
       return indexes.max() == self.pages - 1}
-    
 
-    
-    
-    
-    
     let searchNameSiganl = input.searchName
     
+
     
     // prefetchNew Rows
     

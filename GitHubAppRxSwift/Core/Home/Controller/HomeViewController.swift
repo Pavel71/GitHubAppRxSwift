@@ -18,11 +18,8 @@ import Action
 
 class HomeViewController : UIViewController {
   
-//  static let startLoadingOffset: CGFloat = 20.0
-//
-//  static func isNearTheBottomEdge(contentOffset: CGPoint, _ tableView: UITableView) -> Bool {
-//         return contentOffset.y + tableView.frame.size.height + startLoadingOffset > tableView.contentSize.height
-//     }
+  
+  
   
   
   let searchController : UISearchController = {
@@ -58,11 +55,25 @@ class HomeViewController : UIViewController {
   
   // MARK: - ViewModel
   
-  var viewModel  = HomeViewModel()
+  var viewModel  : HomeViewModel
   let bag        = DisposeBag()
   
   
   // MARK: - Init
+  
+  init(viewModel: HomeViewModel) {
+    self.viewModel = viewModel
+    super.init(nibName: nil, bundle: nil)
+  }
+  
+  required init?(coder: NSCoder) {
+    fatalError("init(coder:) has not been implemented")
+  }
+  
+  
+  
+  
+  // MARK: - Lyfe Cycle
   
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -91,17 +102,39 @@ class HomeViewController : UIViewController {
   // MARK: - Bind
   private func bindViewModel() {
     
+    
+    
+    
+    
+    // Inputs
+    
     let inputs = HomeViewModel.Input(
     searchName        : searchController.searchBar.rx.text.orEmpty.asObservable(),
     cancelSearch      : searchController.searchBar.rx.cancelButtonClicked,
     prefetchRows      : tableView.rx.prefetchRows)
+
     
     
+    // Transition
     
+    tableView.rx.itemSelected
+    .do(onNext: { [unowned self] indexPath in
+      self.tableView.deselectRow(at: indexPath, animated: false)
+    })
+    .map { [unowned self] indexPath in
+      try! self.dataSource.model(at: indexPath) as! GitHubUser
+       
+    }
+    .bind(to: viewModel.showDetails.inputs)
+    .disposed(by: bag)
+    
+    // Я так понимаю это должен быть переход на новый экран через мою ViewModel!
+    
+    
+    // Outptus
     let outputs = viewModel.transform(input: inputs)
     
-    
-    
+
     outputs.users
       .drive(tableView.rx.items(dataSource: dataSource!))
       .disposed(by:bag )
