@@ -18,6 +18,12 @@ import Action
 
 class HomeViewController : UIViewController {
   
+//  static let startLoadingOffset: CGFloat = 20.0
+//
+//  static func isNearTheBottomEdge(contentOffset: CGPoint, _ tableView: UITableView) -> Bool {
+//         return contentOffset.y + tableView.frame.size.height + startLoadingOffset > tableView.contentSize.height
+//     }
+  
   
   let searchController : UISearchController = {
     let sc = UISearchController(searchResultsController:nil)
@@ -34,21 +40,15 @@ class HomeViewController : UIViewController {
   
   private lazy var tableView : UITableView = {
     let tableView = UITableView(frame: .zero, style: .plain)
-
-//    tableView.delegate           = self
-//    tableView.dataSource         = self
-//    tableView.prefetchDataSource = self
     tableView.rowHeight = 150
-    tableView.showsVerticalScrollIndicator = false
     tableView.register(UserListCell.self, forCellReuseIdentifier: UserListCell.cellId)
-    
+    tableView.estimatedRowHeight = 1
     tableView.tableFooterView = activityIndicator
     return tableView
   }()
   
   private lazy var activityIndicator : UIActivityIndicatorView = {
     let activityIndicator = UIActivityIndicatorView(style: .gray)
-//    activityIndicator.startAnimating()
     return activityIndicator
   }()
   
@@ -92,12 +92,15 @@ class HomeViewController : UIViewController {
   private func bindViewModel() {
     
     let inputs = HomeViewModel.Input(
-    searchName               : searchController.searchBar.rx.text.orEmpty.asObservable(),
-    cancelSearch             : searchController.searchBar.rx.cancelButtonClicked)
+    searchName        : searchController.searchBar.rx.text.orEmpty.asObservable(),
+    cancelSearch      : searchController.searchBar.rx.cancelButtonClicked,
+    prefetchRows      : tableView.rx.prefetchRows)
     
     
     
     let outputs = viewModel.transform(input: inputs)
+    
+    
     
     outputs.users
       .drive(tableView.rx.items(dataSource: dataSource!))

@@ -125,7 +125,7 @@ final class GitHubApi {
   func searchUsers(userName : String,
                   pages     : Int) -> Observable<UsersSearchResult> {
     
-    print("Search Users",userName)
+//    print("Search Users",userName)
     let endpoint:Endpoint = .userSearch(searchFilter: userName, pages: pages)
     guard let url = endpoint.absoluteURL else {return .just(UsersSearchResult(totalCount: 0, users: []))}
     let request = URLRequest(url: url)

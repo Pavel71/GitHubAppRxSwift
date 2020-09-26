@@ -44,13 +44,17 @@ extension  GitHubUser : Equatable {
   static func ==(lhs: GitHubUser,rhs:GitHubUser) -> Bool {
     return lhs.username == rhs.username
   }
+  
+  static func <(lhs: GitHubUser,rhs:GitHubUser) -> Bool {
+    return lhs.username < rhs.username
+  }
 }
 
 extension GitHubUser:IdentifiableType {
-  typealias Identity = String
+  typealias Identity = Int
   
-  var identity: String {
-    return username
+  var identity: Int {
+    return avatarUrl.hashValue
   }
   
   

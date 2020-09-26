@@ -28,8 +28,11 @@ final class HomeViewModel:ViewModelType {
   // MARK: - Input
   
   struct Input {
-    let searchName               : Observable<String>
-    let cancelSearch             : ControlEvent<Void>
+    let searchName      : Observable<String>
+    let cancelSearch    : ControlEvent<Void>
+    let prefetchRows    : ControlEvent<[IndexPath]>
+    
+    
   }
   
   // MARK: - Output
@@ -44,12 +47,13 @@ final class HomeViewModel:ViewModelType {
   
   // Properties
   
-  var pages = 20
+  var pages       = 20
+  var currentName = ""
   
   var gitHubAPi: GitHubApi! = ServiceLocator.shared.getService()
   
   
-  
+//  let bag = DisposeBag()
   // MARK: - Transform
   
   func transform(input: Input) -> Output {
@@ -60,17 +64,50 @@ final class HomeViewModel:ViewModelType {
     
    
     
-      
+    // Inputs
+    
+    
+    
+    
+    let prefetchSignal = input.prefetchRows
+      .debounce(.milliseconds(700), scheduler: MainScheduler.instance)
+    .map{$0.compactMap{$0.row}}
+    .distinctUntilChanged()
+    .filter{[unowned self] indexes in
+      return indexes.max() == self.pages - 1}
+    
+
+    
+    
+    
+    
+    let searchNameSiganl = input.searchName
+    
+    
+    // prefetchNew Rows
+    
+    let prefetchNewUsers = prefetchSignal
+      .flatMap({ [unowned self] _ -> Observable<UsersSearchResult>  in
+       
+        self.pages += 20
+        print("Loaded New Users",self.pages)
+        return  self.gitHubAPi.searchUsers(userName: self.currentName, pages: self.pages)
+          .catchErrorJustReturn(self.empty)
+      })
+      .map{$0.users}
+
     
      
     // Search Users
-    let searchUsers = input.searchName
+    let searchUsers = searchNameSiganl
       .debounce(.milliseconds(300), scheduler: MainScheduler.instance)
       .distinctUntilChanged()
       .flatMapLatest {[unowned self]
         (searchStr) -> Observable<UsersSearchResult> in
         
         if searchStr.isEmpty {return .just(self.empty)}
+        self.pages       = 20
+        self.currentName = searchStr
         
         return  self.gitHubAPi.searchUsers(userName: searchStr, pages: self.pages)
           .catchErrorJustReturn(self.empty)
@@ -92,13 +129,17 @@ final class HomeViewModel:ViewModelType {
     
     let running = BehaviorRelay<Bool>(value: false)
         
-        _ = input.searchName
+        _ = searchNameSiganl
           .map{$0.isEmpty == false}
+          .bind(to: running)
+    
+        _ = prefetchSignal
+          .map({ (_) -> Bool in true})
           .bind(to: running)
     
     // DataSOurce
     
-    let users = Observable.merge(searchUsers,cancelSearch)
+    let users = Observable.merge(searchUsers,cancelSearch,prefetchNewUsers)
       .do(onNext: { (_) in
         running.accept(false)
       })

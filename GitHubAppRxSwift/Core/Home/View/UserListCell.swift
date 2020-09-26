@@ -35,6 +35,7 @@ class UserListCell: UITableViewCell {
     let l = UILabel()
     l.translatesAutoresizingMaskIntoConstraints = false
     l.font = UIFont.systemFont(ofSize: 20)
+    l.numberOfLines = 0
     return l
   }()
   
