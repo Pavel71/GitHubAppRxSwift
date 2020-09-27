@@ -45,20 +45,14 @@ struct Repository : Decodable,RepoListCellable {
   
 }
 
-extension Repository: IdentifiableType {
-  var identity: String {
-    return id
+extension Repository: IdentifiableType,Equatable {
+  var identity: Int {
+    return id.hashValue
   }
   
-  typealias Identity = String
+  typealias Identity = Int
   
   
 }
 
-extension Repository: Equatable {
-  
-  static func ==(lhs: Repository,rhs:Repository) -> Bool {
-    return lhs.id == rhs.id
-  }
-  
-}
+

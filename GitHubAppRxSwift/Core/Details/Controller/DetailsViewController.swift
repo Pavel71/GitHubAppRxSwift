@@ -39,7 +39,7 @@ class DetailsViewController : UIViewController {
   
   
   typealias ReposSection = AnimatableSectionModel<String,Repository>
-  var reposDataSource : RxTableViewSectionedReloadDataSource<ReposSection>!
+  var reposDataSource : RxTableViewSectionedAnimatedDataSource<ReposSection>!
   
   init(viewModel: DetailsViewModel) {
     self.viewModel = viewModel
@@ -102,7 +102,7 @@ class DetailsViewController : UIViewController {
   // MARK: - DataSOurce
   private func configureDataSource() {
     
-    reposDataSource = RxTableViewSectionedReloadDataSource<ReposSection>(configureCell: { (_, tableView, indexPath, item) -> RepoListCell in
+    reposDataSource = RxTableViewSectionedAnimatedDataSource<ReposSection>(configureCell: { (_, tableView, indexPath, item) -> RepoListCell in
       
       let cell = tableView.dequeueReusableCell(withIdentifier: RepoListCell.cellId, for: indexPath) as! RepoListCell
       
