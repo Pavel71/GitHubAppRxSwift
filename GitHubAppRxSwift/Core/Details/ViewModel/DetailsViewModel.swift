@@ -10,6 +10,7 @@ import UIKit
 import RxSwift
 import RxCocoa
 import Action
+import RxDataSources
 
 
 
@@ -27,24 +28,17 @@ final class DetailsViewModel:ViewModelType {
    // MARK: - Output
 
    struct Output {
-    let detailScreenModel : Driver<DetailScreenModel>
+//    let detailScreenModel : Driver<DetailScreenModel>
+    let detailHeaderModel : Driver<DetailModel>
+    let reposModel        : Driver<[ReposSection]>
 //     let runningActivityIndicator : Driver<Bool>
    }
   
   
-  // MARK: Transition
-  
-//  lazy var dismissAction : CocoaAction = { this in
-//
-//    return CocoaAction {
-//      return this.sceneCoordinator.dismisModal(animated: false)
-//           .asObservable()
-//           .map { _ in }
-//       }
-//  }(self)
-  
-  
-  
+
+   typealias ReposSection = AnimatableSectionModel<String,Repository>
+  var repos = BehaviorRelay<[Repository]>(value: [])
+
   
   
   
@@ -63,6 +57,20 @@ final class DetailsViewModel:ViewModelType {
     
   }
   
+  func showMoreInfo(indexPath: IndexPath) -> CocoaAction {
+    
+    return CocoaAction{
+      print("Some Action")
+            var repos = self.repos.value
+      print(repos[indexPath.row].isNeedMoreInfo)
+            repos[indexPath.row].isNeedMoreInfo.toggle()
+      print(repos[indexPath.row].isNeedMoreInfo)
+            self.repos.accept(repos)
+      return .empty()
+      
+    }
+  }
+  
   // MARK: - Transform
   
   func transform(input: Input) -> Output {
@@ -71,28 +79,46 @@ final class DetailsViewModel:ViewModelType {
     // когда юзер приходит мы должны получить данны по деталям и по репоизториям
     
     let userName = input.user.map{$0.username}
-//    let repos   = input.user.map{$0.reposUrl}
     
     
     let details = userName.flatMap {[unowned self] (name) -> Observable<DetailModel> in
-      print("Fetch Details")
+      
       return self.gitHubAPi.fetchUserDetails(userName: name).catchErrorJustReturn(DetailModel.dummy)
     }
     
     let repos = userName.flatMap {[unowned self] (name) -> Observable<[Repository]> in
-         print("Fetch Repos")
+         
          return self.gitHubAPi.fetchUserRepos(userName: name).catchErrorJustReturn([])
        }
     
+    let resultsLoaded     = Observable.combineLatest(details, repos)
     
-    let output = Observable.combineLatest(details, repos)
-      .map { (detailModel,repos) -> DetailScreenModel in
-        print("Пришли все данные")
-        return DetailScreenModel(details: detailModel, repos: repos)
-    }.asDriver(onErrorJustReturn: .init(details: DetailModel.dummy, repos: []))
-      
     
-    return Output(detailScreenModel: output)
+    // Detail
+    
+    let detailModel = resultsLoaded.map{$0.0}.asDriver(onErrorJustReturn: DetailModel.dummy)
+    
+    
+    // Repos
+    
+    let _  = resultsLoaded
+  
+      .map{$0.1}
+      .subscribe(onNext: { [unowned self](repos) in
+        self.repos.accept(repos)
+      })
+
+    
+    let reposModelUpdated = self.repos
+      .skip(1)
+      .map{[ReposSection(model: "", items: $0)]}
+      .asDriver(onErrorJustReturn: [])
+    
+    
+    return Output(
+      detailHeaderModel : detailModel,
+      reposModel        : reposModelUpdated)
+    
   }
   
   

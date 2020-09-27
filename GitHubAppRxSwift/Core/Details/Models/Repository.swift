@@ -25,6 +25,8 @@ import RxDataSources
 struct Repository : Decodable,RepoListCellable {
   
   
+  var id              = UUID().uuidString
+  
   var name            : String
   var language        : String?
   
@@ -44,16 +46,19 @@ struct Repository : Decodable,RepoListCellable {
 }
 
 extension Repository: IdentifiableType {
-  var identity: Int {
-    return name.hashValue
+  var identity: String {
+    return id
   }
   
-  typealias Identity = Int
+  typealias Identity = String
   
   
 }
 
 extension Repository: Equatable {
   
+  static func ==(lhs: Repository,rhs:Repository) -> Bool {
+    return lhs.id == rhs.id
+  }
   
 }

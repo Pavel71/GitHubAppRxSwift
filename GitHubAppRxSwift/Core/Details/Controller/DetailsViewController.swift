@@ -18,7 +18,7 @@ class DetailsViewController : UIViewController {
   
   // Outlets
 
-  private lazy var headerView = DetailHeaderView(frame: .init(x: 0, y: 0, width: 0, height: 200))
+  private lazy var headerView = DetailHeaderView(frame: .init(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 200))
   
   private lazy var tableView : UITableView = {
     let tableView = UITableView(frame: .zero, style: .plain)
@@ -27,6 +27,7 @@ class DetailsViewController : UIViewController {
     tableView.rowHeight = UITableView.automaticDimension
     tableView.estimatedRowHeight = 1
     tableView.allowsSelection = false
+    tableView.tableFooterView = UIView()
     
     return tableView
   }()
@@ -38,7 +39,7 @@ class DetailsViewController : UIViewController {
   
   
   typealias ReposSection = AnimatableSectionModel<String,Repository>
-  var reposDataSource : RxTableViewSectionedAnimatedDataSource<ReposSection>!
+  var reposDataSource : RxTableViewSectionedReloadDataSource<ReposSection>!
   
   init(viewModel: DetailsViewModel) {
     self.viewModel = viewModel
@@ -66,20 +67,26 @@ class DetailsViewController : UIViewController {
   // MARK: - Bind
    private func bindViewModel() {
     let userInput = BehaviorRelay<GitHubUser>(value: viewModel.user)
-    let input = DetailsViewModel.Input(user: userInput.asObservable())
+    let input     = DetailsViewModel.Input(user: userInput.asObservable())
     
     let output = viewModel.transform(input: input)
     
-    let model = output.detailScreenModel.map{$0}
     
-    model.map{$0.details}
+    let detailModel = output.detailHeaderModel
+    let repos       = output.reposModel
+//    let model = output.detailScreenModel.map{$0}
+    
+    detailModel
       .drive(onNext: { [unowned self] (deatailModel) in
         self.headerView.configure(viewModel: deatailModel)
+        self.tableView.tableHeaderView = self.headerView
       })
       .disposed(by: bag)
     
-    model.map{$0.repos}
-      .map{[ReposSection(model: "", items: $0 ?? [])]}
+    repos
+      .do(onNext: { (repos) in
+        print("Updte TableView",repos[0].items[0])
+      })
       .drive(tableView.rx.items(dataSource: reposDataSource!))
       .disposed(by: bag)
 
@@ -90,17 +97,22 @@ class DetailsViewController : UIViewController {
     view.addSubview(tableView)
     tableView.fillSuperview()
     
-    tableView.tableHeaderView = headerView
   }
   
+  // MARK: - DataSOurce
   private func configureDataSource() {
     
-    reposDataSource = RxTableViewSectionedAnimatedDataSource<ReposSection>(configureCell: { (_, tableView, indexPath, item) -> RepoListCell in
+    reposDataSource = RxTableViewSectionedReloadDataSource<ReposSection>(configureCell: { (_, tableView, indexPath, item) -> RepoListCell in
       
       let cell = tableView.dequeueReusableCell(withIdentifier: RepoListCell.cellId, for: indexPath) as! RepoListCell
-      cell.configure(viewModel: item)
+      
+      cell.configure(
+        viewModel: item,
+        showMoreAction: self.viewModel.showMoreInfo(indexPath: indexPath))
+      
       return cell
     })
+    
     
   }
   

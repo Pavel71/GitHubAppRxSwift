@@ -28,7 +28,7 @@ class DetailHeaderView: UIView {
   private var avatarImageView: UIImageView = {
     let iv = UIImageView()
     iv.backgroundColor = .lightGray
-    iv.contentMode     = .scaleAspectFit
+    iv.contentMode     = .scaleAspectFill
     iv.translatesAutoresizingMaskIntoConstraints = false
     iv.clipsToBounds = true
     //    iv.layer.cornerRadius = 15
@@ -69,7 +69,9 @@ class DetailHeaderView: UIView {
     return stack
   }()
   
+  
   private lazy var topHStack: UIStackView = {
+    
     let hStack = UIStackView(arrangedSubviews: [avatarImageView,rightVStack])
     hStack.axis         = .horizontal
     hStack.distribution = .fill
@@ -90,31 +92,38 @@ class DetailHeaderView: UIView {
     return stack
   }()
   private lazy var bottomVStack: UIStackView = {
-    let hStack = UIStackView(arrangedSubviews: [locationHStack,createdHStack])
-    hStack.axis         = .vertical
-    hStack.distribution = .fillEqually
-    hStack.spacing       = 5
-    hStack.translatesAutoresizingMaskIntoConstraints = false
-    return hStack
+    let vStack = UIStackView(arrangedSubviews: [locationHStack,createdHStack])
+    vStack.axis         = .vertical
+    vStack.distribution = .fillEqually
+    vStack.spacing       = 5
+    vStack.translatesAutoresizingMaskIntoConstraints = false
+    return vStack
   }()
   
   private lazy var nameHStack : UIStackView = {
-    
-//    let vStack = UIStackView(arrangedSubviews: [nameLabel])
-//    vStack.distribution = .fill
-//    vStack.alignment    = .fill
-//    vStack.axis         = .vertical
     nameLabel.numberOfLines = 0
     nameLabel.lineBreakMode = .byWordWrapping
     
     let stackView = UIStackView(arrangedSubviews: [nameTitleLabel,nameLabel])
-    stackView.alignment = .top
+
     stackView.axis      = .horizontal
     stackView.alignment = .firstBaseline
     stackView.spacing   = 5
     stackView.translatesAutoresizingMaskIntoConstraints = false
     return stackView
   }()
+  
+    private lazy var loginHStack : UIStackView = {
+      loginLabel.numberOfLines = 0
+      loginLabel.lineBreakMode = .byCharWrapping
+      
+      let stackView = UIStackView(arrangedSubviews: [loginTitleLabel,loginLabel])
+      stackView.axis      = .horizontal
+      stackView.alignment = .firstBaseline
+      stackView.spacing   = 5
+      stackView.translatesAutoresizingMaskIntoConstraints = false
+      return stackView
+    }()
   
   private lazy var locationHStack : UIStackView = {
     locationLabel.numberOfLines = 0
@@ -138,29 +147,16 @@ class DetailHeaderView: UIView {
      return stackView
    }()
   
-  private lazy var loginHStack : UIStackView = {
-    loginLabel.numberOfLines = 0
-    loginLabel.lineBreakMode = .byCharWrapping
-    
-    let stackView = UIStackView(arrangedSubviews: [loginTitleLabel,loginLabel])
-    stackView.axis      = .horizontal
-    stackView.alignment = .firstBaseline
-    stackView.spacing   = 5
-    stackView.translatesAutoresizingMaskIntoConstraints = false
-    return stackView
-  }()
-  
-//  private lazy var loginHStack = createSimpleHStack(view1: loginTitleLabel, view2: loginLabel,aligment: .firstBaseline)
-  
-  
+
   
   // MARK: - Init
   override init(frame: CGRect) {
     super.init(frame: frame)
     
-    backgroundColor = UIColor(named: "HeaderBackround")
+    backgroundColor = #colorLiteral(red: 0.880682528, green: 0.8903824687, blue: 0.9031621814, alpha: 1)
     
     addSubViews()
+  
     
     setPriorites()
   }
@@ -181,18 +177,42 @@ class DetailHeaderView: UIView {
     }
     
     
+    
   }
   
+  // MARK: - Set up Views
   private func addSubViews() {
-    addSubview(stack)
-    stack.fillSuperview(padding: .init(top: 10, left: 10, bottom: 10, right: 10))
     
-    avatarImageView.constrainWidth(constant: height * 0.5)
-    avatarImageView.constrainHeight(constant: height * 0.5)
+    
+    self.addSubview(stack)
+    
+   
+
 
   }
   required init?(coder: NSCoder) {
     fatalError("init(coder:) has not been implemented")
+  }
+  
+  override func updateConstraints() {
+
+       
+     NSLayoutConstraint.activate([
+       
+       
+       stack.topAnchor.constraint(equalTo: topAnchor,constant: 10),
+       stack.trailingAnchor.constraint(equalTo: trailingAnchor,constant: 10),
+       stack.bottomAnchor.constraint(equalTo: bottomAnchor,constant: -10),
+       stack.leadingAnchor.constraint(equalTo: leadingAnchor,constant: 10),
+       
+       
+       avatarImageView.widthAnchor.constraint(equalTo: avatarImageView.heightAnchor, multiplier: 1),
+       
+       topHStack.heightAnchor.constraint(equalToConstant: height * 0.6)
+     ])
+
+
+    super.updateConstraints()
   }
   
 }
@@ -203,30 +223,25 @@ class DetailHeaderView: UIView {
 extension DetailHeaderView {
   
   func configure(viewModel:DetailHeaderViewable) {
+    print("Configure Header")
     
+    self.nameLabel.text     = viewModel.name     ?? "--//--"
+    self.loginLabel.text    = viewModel.login
+    self.locationLabel.text = viewModel.location ?? "--//--"
     
+    self.createdLabel.text  = self.changeDateFormatt(date: viewModel.createdAt)
     
+    guard let imageUrl = viewModel.avatarUrl else {return }
+    self.downloadAndDisplay(gif: imageUrl)
     
-    
-    
-    UIView.transition(with: self, duration: 0.5, options: .curveEaseOut, animations: {
-      self.nameLabel.text     = viewModel.name     ?? "--//--"
-      self.loginLabel.text    = viewModel.login
-      self.locationLabel.text = viewModel.location ?? "--//--"
+    UIView.animate(withDuration: 0.5) {
+      self.setNeedsUpdateConstraints()
+      self.layoutIfNeeded()
       
-      self.createdLabel.text  = self.changeDateFormatt(date: viewModel.createdAt)
-      
-      
-      guard let imageUrl = viewModel.avatarUrl else {return }
-      self.downloadAndDisplay(gif: imageUrl)
-    }, completion: nil)
-    
-//    UIView.animate(withDuration: 0.5) {
-//      self.layoutIfNeeded()
-//    }
+    }
     
     
-    
+
   }
   
     // MARK: - DownLoad Image

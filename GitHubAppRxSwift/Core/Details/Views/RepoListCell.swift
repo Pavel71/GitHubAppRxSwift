@@ -7,7 +7,7 @@
 //
 
 import UIKit
-
+import Action
 
 protocol RepoListCellable {
   var name            : String  {get set}
@@ -89,7 +89,7 @@ class RepoListCell : UITableViewCell {
       $0.textAlignment = .right  
     }
     
-    moreDataButton.addTarget(self, action: #selector(handleMoreDataInfo), for: .touchUpInside)
+
     
     setViews()
   }
@@ -115,32 +115,35 @@ extension RepoListCell {
 extension RepoListCell {
   
   
-  func configure(viewModel:RepoListCellable) {
+  func configure(viewModel:RepoListCellable,showMoreAction: CocoaAction) {
+    
     self.repoLabel.text       = viewModel.name
     self.languageLabel.text   = viewModel.language ?? "--//--"
     
+    moreDataButton.rx.action  = showMoreAction
     
     
     if viewModel.isNeedMoreInfo {
-      self.starLabel.text       = "\(viewModel.stars)"
-      self.updateDateLabel.text = changeDateFormattWithTime(date: viewModel.updatedAt)
-      
-      self.starsHStack.isHidden      = false
-      self.lastUpdateHStack.isHidden = false
-    } else {
-      self.starsHStack.isHidden      = true
-      self.lastUpdateHStack.isHidden = true
-    }
+         
+         self.starLabel.text       = "\(viewModel.stars)"
+         self.updateDateLabel.text = self.changeDateFormattWithTime(date: viewModel.updatedAt)
+         
+         self.starsHStack.isHidden      = false
+         self.lastUpdateHStack.isHidden = false
+       } else {
+         self.starsHStack.isHidden      = true
+         self.lastUpdateHStack.isHidden = true
+       }
+    
+
+  
     
   }
   
-  
-}
-// MARK: Signals
-
-extension RepoListCell {
-  
-  @objc private func handleMoreDataInfo(button: UIButton) {
-    didTapMoreButtonClouser!(button)
+  override func prepareForReuse() {
+    super.prepareForReuse()
+    moreDataButton.rx.action = nil
   }
+  
 }
+
