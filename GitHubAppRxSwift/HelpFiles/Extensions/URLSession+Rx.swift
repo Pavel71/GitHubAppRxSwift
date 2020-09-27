@@ -5,6 +5,7 @@ import RxSwift
 
 private var internalCache = [String: Data]()
 
+
 public enum RxURLSessionError: Error {
   case unknown
   case invalidResponse(response: URLResponse)

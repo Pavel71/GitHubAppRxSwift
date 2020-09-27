@@ -55,7 +55,9 @@ final class HomeViewModel:ViewModelType {
       // output
     return this.sceneCoordinator
       .transition(to: Scene.details(detailViewModel), type: .push)
-      .asObservable() }
+      .asObservable()
+      
+    }
     
   }(self)
   

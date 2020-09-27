@@ -141,7 +141,7 @@ extension UserListCell {
   }
   
 
-  
+  // MARK: - DownLoad Image
 func downloadAndDisplay(gif url: URL) {
     
     let request = URLRequest(url: url)
@@ -151,31 +151,7 @@ func downloadAndDisplay(gif url: URL) {
   let download = URLSession.shared.rx.image(request: request)
     .observeOn(MainScheduler.instance)
     .bind(to: avatarImageView.rx.image)
-    
-//    let s = URLSession.shared.rx.data(request: request)
-//      .observeOn(MainScheduler.instance)
-//      .subscribe(onNext: { [weak self] imageData in
-//        guard let self = self else { return }
-//
-//        self.gifImageView.animate(withGIFData: imageData)
-//        self.activityIndicator.stopAnimating()
-//      }, onError: { (error) in
-//        guard let rxUrlError  = error as? RxURLSessionError else {return}
-//
-//        switch rxUrlError {
-//        case .deserializationFailed:
-//          print("Ошибка декодинга")
-//        default: print("Другаы ошибка")
-//        }
-//
-//      })
-    
-//      .subscribe(onNext: { [weak self] imageData in
-//        guard let self = self else { return }
-//
-//        self.gifImageView.animate(withGIFData: imageData)
-//        self.activityIndicator.stopAnimating()
-//      })
+
 
     disposable.setDisposable(download)
   }

@@ -135,6 +135,29 @@ final class GitHubApi {
 
   }
   
+  func fetchUserDetails(userName: String) -> Observable<DetailModel> {
+    
+    
+    let endpoint :Endpoint = .user(userName: userName)
+    guard let url = endpoint.absoluteURL else {return .just(DetailModel.dummy)}
+    
+    let request = URLRequest(url: url)
+    
+    return URLSession.shared.rx.decodable(request: request, type: DetailModel.self)
+  }
+  
+  
+  func fetchUserRepos(userName: String) -> Observable<[Repository]> {
+    
+    
+    let endpoint :Endpoint = .repos(userName: userName)
+    guard let url = endpoint.absoluteURL else {return .just([])}
+    
+    let request = URLRequest(url: url)
+    
+    return URLSession.shared.rx.decodable(request: request, type: [Repository].self)
+  }
+  
 //      // MARK: - Fetch User
 //  func fetchUser(userName: String,
 //                      completion: @escaping (Result<DetailModel,GitHubApiError>) -> Void) {
